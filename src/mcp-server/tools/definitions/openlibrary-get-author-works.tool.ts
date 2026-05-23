@@ -1,0 +1,71 @@
+/**
+ * @fileoverview List works by an author.
+ * @module mcp-server/tools/definitions/openlibrary-get-author-works.tool
+ */
+
+import { tool, z } from '@cyanheads/mcp-ts-core';
+import { getOpenLibraryService } from '@/services/open-library/open-library-service.js';
+
+export const openlibraryGetAuthorWorks = tool('openlibrary_get_author_works', {
+  title: 'Get Author Works',
+  description:
+    'List works by an author. Returns titles, cover IDs, and work OLIDs for drilling into editions or details. Use openlibrary_get_author for author bio and details, or openlibrary_get_editions to explore specific printings.',
+  annotations: { readOnlyHint: true },
+  input: z.object({
+    author_id: z
+      .string()
+      .describe(
+        'Open Library Author ID (OL…A). A leading "/authors/" prefix is stripped if provided.',
+      ),
+    limit: z.number().int().min(1).max(100).default(20).describe('Max works to return.'),
+    offset: z.number().int().min(0).default(0).describe('Zero-based offset for pagination.'),
+  }),
+  output: z.object({
+    total: z.number().describe('Total works by this author.'),
+    author_id: z.string().describe('Open Library Author ID.'),
+    works: z
+      .array(
+        z
+          .object({
+            work_id: z
+              .string()
+              .describe(
+                'Open Library Work ID (OL…W). Use for openlibrary_get_work or openlibrary_get_editions.',
+              ),
+            title: z.string().describe('Work title.'),
+            first_publish_date: z
+              .string()
+              .optional()
+              .describe('First publication date string. Absent when not recorded.'),
+            cover_ids: z
+              .array(z.number())
+              .describe('Numeric cover IDs for openlibrary_get_cover_url.'),
+          })
+          .describe('A work by this author.'),
+      )
+      .describe('Works by this author, up to limit.'),
+  }),
+
+  async handler(input, ctx) {
+    ctx.log.info('Fetching author works', { author_id: input.author_id, limit: input.limit });
+    const svc = getOpenLibraryService();
+    return svc.getAuthorWorks(input.author_id, input.limit, input.offset, ctx);
+  },
+
+  format: (result) => {
+    const lines: string[] = [];
+    lines.push(
+      `**Author ID:** ${result.author_id} | **Total works:** ${result.total} | **Returned:** ${result.works.length}`,
+    );
+
+    for (const work of result.works) {
+      lines.push('');
+      lines.push(`### ${work.title}`);
+      lines.push(`**Work ID:** ${work.work_id}`);
+      if (work.first_publish_date) lines.push(`**First published:** ${work.first_publish_date}`);
+      if (work.cover_ids.length) lines.push(`**Cover IDs:** ${work.cover_ids.join(', ')}`);
+    }
+
+    return [{ type: 'text', text: lines.join('\n') }];
+  },
+});
