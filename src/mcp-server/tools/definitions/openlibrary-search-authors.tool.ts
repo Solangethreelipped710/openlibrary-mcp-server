@@ -11,7 +11,7 @@ export const openlibrarySearchAuthors = tool('openlibrary_search_authors', {
   title: 'Search Authors',
   description:
     'Search Open Library authors by name. Returns Open Library Author IDs, names, birth/death dates, top works, and subject associations. Use author IDs for openlibrary_get_author (bio, remote IDs) or openlibrary_get_author_works (list of works).',
-  annotations: { readOnlyHint: true },
+  annotations: { readOnlyHint: true, openWorldHint: true },
   input: z.object({
     query: z.string().describe('Author name search query. Partial names and alternate names work.'),
     limit: z.number().int().min(1).max(100).default(10).describe('Max results to return.'),

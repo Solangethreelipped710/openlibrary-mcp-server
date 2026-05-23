@@ -61,7 +61,7 @@ export class OpenLibraryService {
     return { 'User-Agent': this.userAgent };
   }
 
-  private async fetch<T>(url: string, ctx: Context): Promise<T> {
+  private fetch<T>(url: string, ctx: Context): Promise<T> {
     // `fetchWithTimeout` and `withRetry` accept `RequestContext` which requires an index signature.
     // `Context` is structurally compatible at runtime — cast is safe per framework docs.
     // biome-ignore lint/suspicious/noExplicitAny: safe per framework docs
@@ -115,14 +115,7 @@ export class OpenLibraryService {
     if (params.isbn) qs.set('isbn', params.isbn.replace(/-/g, ''));
     if (params.language) qs.set('lang', params.language);
     if (params.sort && params.sort !== 'relevance') {
-      const sortMap: Record<string, string> = {
-        new: 'new',
-        old: 'old',
-        rating: 'rating',
-        editions: 'editions',
-      };
-      const mapped = sortMap[params.sort];
-      if (mapped) qs.set('sort', mapped);
+      qs.set('sort', params.sort);
     }
 
     qs.set('limit', String(params.limit));

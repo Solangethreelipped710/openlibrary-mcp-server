@@ -1,7 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "cyanheads/openlibrary-mcp-server",
-  "description": "Read-only access to Open Library — 20M+ book editions, author records, subjects, and cover images via the Internet Archive's Open Library API.",
+  "description": "Read-only access to Open Library — 20M+ book editions, authors, subjects, and cover images.",
   "repository": {
     "url": "https://github.com/cyanheads/openlibrary-mcp-server",
     "source": "github"

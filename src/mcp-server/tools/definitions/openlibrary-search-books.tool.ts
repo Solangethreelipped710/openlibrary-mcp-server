@@ -11,7 +11,7 @@ export const openlibrarySearchBooks = tool('openlibrary_search_books', {
   title: 'Search Books',
   description:
     'Full-text book search across Open Library works. Supports field filters (title, author, subject, publisher, ISBN, language) and returns work-level records with edition counts, cover IDs, and reading availability. Use query for general search or combine specific field filters. Results are work-level — drill into editions via openlibrary_get_editions.',
-  annotations: { readOnlyHint: true },
+  annotations: { readOnlyHint: true, openWorldHint: true },
   input: z.object({
     query: z
       .string()

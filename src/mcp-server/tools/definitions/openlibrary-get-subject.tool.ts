@@ -11,7 +11,7 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
   title: 'Get Subject',
   description:
     'Browse works by subject. Returns matching works with edition counts and cover IDs, plus the total work count for the subject. Subjects are user-contributed and may be inconsistent ("science fiction", "Science fiction", "SF" are separate tags). Try lowercase forms first.',
-  annotations: { readOnlyHint: true },
+  annotations: { readOnlyHint: true, openWorldHint: true },
   input: z.object({
     subject: z
       .string()
@@ -62,7 +62,7 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
     },
   ],
 
-  async handler(input, ctx) {
+  handler(input, ctx) {
     ctx.log.info('Fetching subject', {
       subject: input.subject,
       limit: input.limit,

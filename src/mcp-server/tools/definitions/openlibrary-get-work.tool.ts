@@ -11,7 +11,7 @@ export const openlibraryGetWork = tool('openlibrary_get_work', {
   title: 'Get Work',
   description:
     'Fetch a work by Open Library Work ID (OL…W). Returns title, description, subjects, cover IDs, and linked author IDs for follow-up lookups. Works represent the abstract book concept independent of any specific edition. Note: author names are not included — use openlibrary_get_author or openlibrary_search_books for names.',
-  annotations: { readOnlyHint: true, idempotentHint: true },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
   input: z.object({
     work_id: z
       .string()
@@ -55,7 +55,7 @@ export const openlibraryGetWork = tool('openlibrary_get_work', {
     },
   ],
 
-  async handler(input, ctx) {
+  handler(input, ctx) {
     ctx.log.info('Fetching work', { work_id: input.work_id });
     const svc = getOpenLibraryService();
     return svc.getWork(input.work_id, ctx);

@@ -11,7 +11,7 @@ export const openlibraryGetEditions = tool('openlibrary_get_editions', {
   title: 'Get Editions',
   description:
     'List editions of a work — different publishers, languages, formats, and print runs. Returns ISBNs, publisher, language, page count, and edition OLIDs. Use after openlibrary_get_work or openlibrary_search_books to find a specific printing.',
-  annotations: { readOnlyHint: true },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
   input: z.object({
     work_id: z
       .string()
@@ -75,7 +75,7 @@ export const openlibraryGetEditions = tool('openlibrary_get_editions', {
     },
   ],
 
-  async handler(input, ctx) {
+  handler(input, ctx) {
     ctx.log.info('Fetching editions', {
       work_id: input.work_id,
       limit: input.limit,

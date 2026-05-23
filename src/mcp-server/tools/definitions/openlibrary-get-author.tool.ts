@@ -11,7 +11,7 @@ export const openlibraryGetAuthor = tool('openlibrary_get_author', {
   title: 'Get Author',
   description:
     'Fetch author detail by Open Library Author ID (OL…A). Returns bio, birth/death dates, photo IDs, and linked identifiers from Wikidata, VIAF, ISNI, Goodreads, and LibraryThing. Use openlibrary_search_authors to find an author ID first.',
-  annotations: { readOnlyHint: true, idempotentHint: true },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
   input: z.object({
     author_id: z
       .string()
@@ -58,7 +58,7 @@ export const openlibraryGetAuthor = tool('openlibrary_get_author', {
     },
   ],
 
-  async handler(input, ctx) {
+  handler(input, ctx) {
     ctx.log.info('Fetching author', { author_id: input.author_id });
     const svc = getOpenLibraryService();
     return svc.getAuthor(input.author_id, ctx);

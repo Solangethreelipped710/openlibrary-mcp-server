@@ -11,7 +11,7 @@ export const openlibraryGetEdition = tool('openlibrary_get_edition', {
   title: 'Get Edition',
   description:
     'Fetch a single edition by identifier: ISBN-10, ISBN-13, OCLC, LCCN, or Open Library Edition ID (OL…M). Returns full edition metadata including authors, publisher, language, all identifier types, and the parent work ID. Use for ISBN lookups — pass id_type "isbn" for both ISBN-10 and ISBN-13.',
-  annotations: { readOnlyHint: true, idempotentHint: true },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: true },
   input: z.object({
     identifier: z
       .string()
@@ -84,23 +84,27 @@ export const openlibraryGetEdition = tool('openlibrary_get_edition', {
     },
   ],
 
-  async handler(input, ctx) {
+  handler(input, ctx) {
     ctx.log.info('Fetching edition', { identifier: input.identifier, id_type: input.id_type });
 
-    // Basic validation
+    // Basic validation — return rejected Promise so callers can use await
     if (input.id_type === 'isbn') {
       const digits = input.identifier.replace(/-/g, '');
       if (!/^\d{10}$/.test(digits) && !/^\d{13}$/.test(digits)) {
-        throw ctx.fail(
-          'invalid_identifier',
-          `"${input.identifier}" is not a valid ISBN (must be 10 or 13 digits).`,
+        return Promise.reject(
+          ctx.fail(
+            'invalid_identifier',
+            `"${input.identifier}" is not a valid ISBN (must be 10 or 13 digits).`,
+          ),
         );
       }
     } else if (input.id_type === 'olid') {
       if (!/^OL\d+M$/i.test(input.identifier)) {
-        throw ctx.fail(
-          'invalid_identifier',
-          `"${input.identifier}" is not a valid Open Library Edition ID. Expected format: OL…M (e.g., OL7353617M).`,
+        return Promise.reject(
+          ctx.fail(
+            'invalid_identifier',
+            `"${input.identifier}" is not a valid Open Library Edition ID. Expected format: OL…M (e.g., OL7353617M).`,
+          ),
         );
       }
     }

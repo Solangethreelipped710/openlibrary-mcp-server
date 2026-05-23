@@ -4,13 +4,14 @@
  */
 
 import { tool, z } from '@cyanheads/mcp-ts-core';
+import { JsonRpcErrorCode } from '@cyanheads/mcp-ts-core/errors';
 import { getOpenLibraryService } from '@/services/open-library/open-library-service.js';
 
 export const openlibraryGetAuthorWorks = tool('openlibrary_get_author_works', {
   title: 'Get Author Works',
   description:
     'List works by an author. Returns titles, cover IDs, and work OLIDs for drilling into editions or details. Use openlibrary_get_author for author bio and details, or openlibrary_get_editions to explore specific printings.',
-  annotations: { readOnlyHint: true },
+  annotations: { readOnlyHint: true, openWorldHint: true },
   input: z.object({
     author_id: z
       .string()
@@ -45,8 +46,17 @@ export const openlibraryGetAuthorWorks = tool('openlibrary_get_author_works', {
       )
       .describe('Works by this author, up to limit.'),
   }),
+  errors: [
+    {
+      reason: 'not_found',
+      code: JsonRpcErrorCode.NotFound,
+      when: 'Author ID does not exist on Open Library.',
+      recovery:
+        'Verify the OLID format (e.g., "OL24638A") or use openlibrary_search_authors to find the correct ID.',
+    },
+  ],
 
-  async handler(input, ctx) {
+  handler(input, ctx) {
     ctx.log.info('Fetching author works', { author_id: input.author_id, limit: input.limit });
     const svc = getOpenLibraryService();
     return svc.getAuthorWorks(input.author_id, input.limit, input.offset, ctx);
