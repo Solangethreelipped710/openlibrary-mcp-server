@@ -39,13 +39,8 @@ function extractLanguageCode(key: string): string {
 /** Normalizes a description that may be a string or { value: string } object. */
 function extractDescription(raw: unknown): string | undefined {
   if (typeof raw === 'string') return raw || undefined;
-  if (
-    raw &&
-    typeof raw === 'object' &&
-    'value' in raw &&
-    typeof (raw as { value: unknown }).value === 'string'
-  ) {
-    return (raw as { value: string }).value || undefined;
+  if (raw && typeof raw === 'object' && 'value' in raw && typeof raw.value === 'string') {
+    return raw.value || undefined;
   }
   return;
 }
@@ -301,20 +296,21 @@ export class OpenLibraryService {
         );
       }
 
-      // Resolve author names via secondary lookup (sequential per design)
-      const authors: Array<{ name: string; author_id?: string }> = [];
-      for (const authorRef of raw.authors ?? []) {
-        const authorId = stripPrefix(authorRef.key, '/authors/');
-        try {
-          const authorRaw = await this.fetch<{ name?: string }>(
-            `${BASE_URL}/authors/${authorId}.json`,
-            ctx,
-          );
-          authors.push({ name: authorRaw.name ?? authorId, author_id: authorId });
-        } catch {
-          authors.push({ author_id: authorId, name: authorId });
-        }
-      }
+      // Resolve author names via parallel secondary lookups
+      const authors: Array<{ name: string; author_id?: string }> = await Promise.all(
+        (raw.authors ?? []).map(async (authorRef) => {
+          const authorId = stripPrefix(authorRef.key, '/authors/');
+          try {
+            const authorRaw = await this.fetch<{ name?: string }>(
+              `${BASE_URL}/authors/${authorId}.json`,
+              ctx,
+            );
+            return { name: authorRaw.name ?? authorId, author_id: authorId };
+          } catch {
+            return { author_id: authorId, name: authorId };
+          }
+        }),
+      );
 
       const editionId = stripPrefix(raw.key, '/books/');
       const edDesc = extractDescription(raw.description);
@@ -482,11 +478,11 @@ export class OpenLibraryService {
       ...(raw.death_date ? { death_date: raw.death_date } : {}),
       photo_ids: raw.photos ?? [],
       remote_ids: {
-        ...(raw.remote_ids?.wikidata ? { wikidata: raw.remote_ids.wikidata } : {}),
-        ...(raw.remote_ids?.viaf ? { viaf: raw.remote_ids.viaf } : {}),
-        ...(raw.remote_ids?.isni ? { isni: raw.remote_ids.isni } : {}),
-        ...(raw.remote_ids?.goodreads ? { goodreads: raw.remote_ids.goodreads } : {}),
-        ...(raw.remote_ids?.librarything ? { librarything: raw.remote_ids.librarything } : {}),
+        ...(raw.remote_ids?.wikidata != null && { wikidata: raw.remote_ids.wikidata }),
+        ...(raw.remote_ids?.viaf != null && { viaf: raw.remote_ids.viaf }),
+        ...(raw.remote_ids?.isni != null && { isni: raw.remote_ids.isni }),
+        ...(raw.remote_ids?.goodreads != null && { goodreads: raw.remote_ids.goodreads }),
+        ...(raw.remote_ids?.librarything != null && { librarything: raw.remote_ids.librarything }),
       },
     };
   }

@@ -1,6 +1,6 @@
 # openlibrary-mcp-server - Directory Structure
 
-Generated on: 2026-05-23 18:11:10
+Generated on: 2026-05-24 21:52:23
 
 ```text
 openlibrary-mcp-server/
@@ -77,6 +77,8 @@ openlibrary-mcp-server/
 │   ├── design-mcp-server/
 │   │   └── SKILL.md
 │   ├── field-test/
+│   │   └── SKILL.md
+│   ├── git-wrapup/
 │   │   └── SKILL.md
 │   ├── maintenance/
 │   │   └── SKILL.md

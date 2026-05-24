@@ -77,7 +77,7 @@ export const openlibraryGetEdition = tool('openlibrary_get_edition', {
     },
     {
       reason: 'invalid_identifier',
-      code: JsonRpcErrorCode.InvalidParams,
+      code: JsonRpcErrorCode.ValidationError,
       when: 'Identifier format is invalid for the specified id_type.',
       recovery:
         'Check the identifier format: ISBNs are 10 or 13 digits; OLIDs end in M (e.g., OL7353617M).',

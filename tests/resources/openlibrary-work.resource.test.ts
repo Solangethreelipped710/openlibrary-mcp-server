@@ -3,7 +3,7 @@
  * @module tests/resources/openlibrary-work.resource.test
  */
 
-import { JsonRpcErrorCode } from '@cyanheads/mcp-ts-core/errors';
+import { JsonRpcErrorCode, McpError } from '@cyanheads/mcp-ts-core/errors';
 import { createMockContext } from '@cyanheads/mcp-ts-core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { openlibraryWorkResource } from '@/mcp-server/resources/definitions/openlibrary-work.resource.js';
@@ -45,7 +45,9 @@ describe('openlibraryWorkResource', () => {
     const svc = (
       await import('@/services/open-library/open-library-service.js')
     ).getOpenLibraryService();
-    vi.spyOn(svc, 'getWork').mockRejectedValueOnce(new Error('Not found'));
+    vi.spyOn(svc, 'getWork').mockRejectedValueOnce(
+      new McpError(JsonRpcErrorCode.NotFound, 'Work OL999W not found on Open Library.'),
+    );
 
     const params = openlibraryWorkResource.params.parse({ work_id: 'OL999W' });
     await expect(openlibraryWorkResource.handler(params, ctx)).rejects.toMatchObject({

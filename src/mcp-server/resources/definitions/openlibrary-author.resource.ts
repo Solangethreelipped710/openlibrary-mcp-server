@@ -4,7 +4,6 @@
  */
 
 import { resource, z } from '@cyanheads/mcp-ts-core';
-import { notFound } from '@cyanheads/mcp-ts-core/errors';
 import { getOpenLibraryService } from '@/services/open-library/open-library-service.js';
 
 export const openlibraryAuthorResource = resource('openlibrary://authors/{author_id}', {
@@ -36,15 +35,8 @@ export const openlibraryAuthorResource = resource('openlibrary://authors/{author
       .describe('External identifiers for cross-referencing.'),
   }),
 
-  async handler(params, ctx) {
+  handler(params, ctx) {
     ctx.log.info('Fetching author resource', { author_id: params.author_id });
-    const svc = getOpenLibraryService();
-    try {
-      return await svc.getAuthor(params.author_id, ctx);
-    } catch {
-      throw notFound(`Author ${params.author_id} not found on Open Library.`, {
-        author_id: params.author_id,
-      });
-    }
+    return getOpenLibraryService().getAuthor(params.author_id, ctx);
   },
 });
