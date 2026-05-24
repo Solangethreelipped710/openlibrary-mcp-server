@@ -2,6 +2,10 @@
 
 All notable changes to this project. Each entry links to its full per-version file in [changelog/](changelog/).
 
+## [0.1.2](changelog/0.1.x/0.1.2.md) — 2026-05-23
+
+Metadata polish — server.json name, runtimeHint, Dockerfile OCI labels, package.json fields, bunfig.toml
+
 ## [0.1.1](changelog/0.1.x/0.1.1.md) — 2026-05-23
 
 Post-launch patch — full Open Library implementation: 9 tools, 2 resources, 11 test files, agent-facing docs and audit
