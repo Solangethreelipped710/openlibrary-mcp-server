@@ -38,7 +38,7 @@ ENV NODE_ENV=production
 
 # OCI image metadata (https://github.com/opencontainers/image-spec/blob/main/annotations.md)
 LABEL org.opencontainers.image.title="@cyanheads/openlibrary-mcp-server"
-LABEL org.opencontainers.image.description="MCP server for Open Library — search 20M+ books, fetch editions, authors, subjects, and cover images."
+LABEL org.opencontainers.image.description="Search books and authors, fetch editions, browse subjects, and resolve cover images from Open Library via MCP. STDIO or Streamable HTTP."
 LABEL org.opencontainers.image.licenses="Apache-2.0"
 LABEL org.opencontainers.image.source="https://github.com/cyanheads/openlibrary-mcp-server"
 

@@ -4,7 +4,6 @@ Generated on: 2026-05-23 18:11:10
 
 ```text
 openlibrary-mcp-server/
-├── .claude/
 ├── .github/
 │   └── ISSUE_TEMPLATE/
 │       ├── bug_report.yml
@@ -149,6 +148,7 @@ openlibrary-mcp-server/
 ├── .mcpbignore
 ├── biome.json
 ├── bun.lock
+├── bunfig.toml
 ├── CHANGELOG.md
 ├── CLAUDE.md
 ├── devcheck.config.json
