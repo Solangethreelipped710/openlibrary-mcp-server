@@ -1,19 +1,19 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.cyanheads/openlibrary-mcp-server",
-  "description": "Read-only access to Open Library — 20M+ book editions, authors, subjects, and cover images.",
+  "description": "Search books and authors, fetch editions, browse subjects, and resolve cover images.",
   "repository": {
     "url": "https://github.com/cyanheads/openlibrary-mcp-server",
     "source": "github"
   },
-  "version": "0.1.2",
+  "version": "0.1.3",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@cyanheads/openlibrary-mcp-server",
       "runtimeHint": "bun",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "packageArguments": [
         {
           "type": "positional",
@@ -42,7 +42,7 @@
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@cyanheads/openlibrary-mcp-server",
       "runtimeHint": "bun",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "packageArguments": [
         {
           "type": "positional",

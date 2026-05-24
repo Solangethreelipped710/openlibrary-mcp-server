@@ -1,8 +1,8 @@
 {
   "name": "@cyanheads/openlibrary-mcp-server",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "mcpName": "io.github.cyanheads/openlibrary-mcp-server",
-  "description": "MCP server for Open Library — search 20M+ books, fetch editions, authors, subjects, and cover images.",
+  "description": "Search books and authors, fetch editions, browse subjects, and resolve cover images from Open Library via MCP. STDIO or Streamable HTTP.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
