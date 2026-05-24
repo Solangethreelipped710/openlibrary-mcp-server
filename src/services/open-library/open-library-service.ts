@@ -529,7 +529,6 @@ export class OpenLibraryService {
     subject: string,
     limit: number,
     offset: number,
-    ebooksOnly: boolean,
     ctx: Context,
   ): Promise<{
     subject_name: string;
@@ -541,7 +540,6 @@ export class OpenLibraryService {
     const qs = new URLSearchParams({
       limit: String(limit),
       offset: String(offset),
-      ...(ebooksOnly ? { ebooks: '1' } : {}),
     });
     const url = `${BASE_URL}/subjects/${encodeURIComponent(subjectKey)}.json?${qs.toString()}`;
     ctx.log.debug('Fetching subject', { subjectKey, limit, offset });

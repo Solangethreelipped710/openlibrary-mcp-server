@@ -90,9 +90,44 @@ describe('openlibraryGetSubject', () => {
     expect(text).toContain('No Cover');
   });
 
-  it('applies defaults: limit 12, no ebooks_only', () => {
+  it('applies defaults: limit 12, offset 0', () => {
     const input = openlibraryGetSubject.input.parse({ subject: 'fiction' });
     expect(input.limit).toBe(12);
-    expect(input.ebooks_only).toBe(false);
+    expect(input.offset).toBe(0);
+  });
+
+  it('returns message when work_count is 0', async () => {
+    const ctx = createMockContext({ errors: openlibraryGetSubject.errors });
+    const svc = (
+      await import('@/services/open-library/open-library-service.js')
+    ).getOpenLibraryService();
+    vi.spyOn(svc, 'getSubject').mockResolvedValueOnce({
+      subject_name: 'xzqnonexistent',
+      subject_key: 'xzqnonexistent',
+      work_count: 0,
+      works: [],
+    });
+
+    const input = openlibraryGetSubject.input.parse({ subject: 'xzqnonexistent' });
+    const result = await openlibraryGetSubject.handler(input, ctx);
+
+    expect(result.work_count).toBe(0);
+    expect(result.works).toHaveLength(0);
+    expect(result.message).toContain('xzqnonexistent');
+    expect(result.message).toContain('lowercase');
+  });
+
+  it('formats empty-result message in content text', () => {
+    const emptyResult = {
+      subject_name: 'xzqnonexistent',
+      subject_key: 'xzqnonexistent',
+      work_count: 0,
+      works: [] as typeof SUBJECT_RESULT.works,
+      message: 'No works found for subject "xzqnonexistent". Try lowercase.',
+    };
+    const blocks = openlibraryGetSubject.format!(emptyResult);
+    const text = (blocks[0] as { text: string }).text;
+    expect(text).toContain('No works found');
+    expect(text).toContain('xzqnonexistent');
   });
 });

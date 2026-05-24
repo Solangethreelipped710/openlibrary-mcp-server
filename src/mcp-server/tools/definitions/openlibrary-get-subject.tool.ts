@@ -26,10 +26,6 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
       .default(12)
       .describe('Max works to return. Subject pages typically show 12 at a time.'),
     offset: z.number().int().min(0).default(0).describe('Zero-based offset for pagination.'),
-    ebooks_only: z
-      .boolean()
-      .default(false)
-      .describe('Restrict to works with a readable or borrowable e-book on Internet Archive.'),
   }),
   output: z.object({
     subject_name: z.string().describe('Canonical subject name as stored on Open Library.'),
@@ -51,6 +47,12 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
           .describe('A work under this subject.'),
       )
       .describe('Works under this subject, up to limit.'),
+    message: z
+      .string()
+      .optional()
+      .describe(
+        'Recovery hint when work_count is 0 — echoes the subject and suggests alternatives. Absent when works are found.',
+      ),
   }),
   errors: [
     {
@@ -62,14 +64,23 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
     },
   ],
 
-  handler(input, ctx) {
+  async handler(input, ctx) {
     ctx.log.info('Fetching subject', {
       subject: input.subject,
       limit: input.limit,
-      ebooks_only: input.ebooks_only,
+      offset: input.offset,
     });
     const svc = getOpenLibraryService();
-    return svc.getSubject(input.subject, input.limit, input.offset, input.ebooks_only, ctx);
+    const result = await svc.getSubject(input.subject, input.limit, input.offset, ctx);
+
+    if (result.work_count === 0) {
+      return {
+        ...result,
+        message: `No works found for subject "${input.subject}". Subjects on Open Library are user-contributed and case-sensitive — try lowercase (e.g., "science fiction"), an alternate form, or a broader term.`,
+      };
+    }
+
+    return result;
   },
 
   format: (result) => {
@@ -78,6 +89,11 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
     lines.push(
       `**Key:** ${result.subject_key} | **Total works:** ${result.work_count} | **Returned:** ${result.works.length}`,
     );
+
+    if (result.message) {
+      lines.push('');
+      lines.push(`> ${result.message}`);
+    }
 
     for (const work of result.works) {
       lines.push('');
