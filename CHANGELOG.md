@@ -2,6 +2,10 @@
 
 All notable changes to this project. Each entry links to its full per-version file in [changelog/](changelog/).
 
+## [0.1.8](changelog/0.1.x/0.1.8.md) — 2026-05-26
+
+Bug fix: default User-Agent changed from bot-style name/version format to plain string — Open Library was returning 403 for the old format
+
 ## [0.1.7](changelog/0.1.x/0.1.7.md) — 2026-05-24
 
 Bug fix: removed error masking in work/author resource handlers; parallelized author lookups; mcp-ts-core ^0.9.7 → ^0.9.9; invalid_identifier error code corrected to ValidationError
