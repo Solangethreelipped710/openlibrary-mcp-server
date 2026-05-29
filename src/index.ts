@@ -19,6 +19,7 @@ import { openlibrarySearchBooks } from './mcp-server/tools/definitions/openlibra
 import { initOpenLibraryService } from './services/open-library/open-library-service.js';
 
 await createApp({
+  landing: { requireAuth: false },
   tools: [
     openlibrarySearchBooks,
     openlibraryGetWork,
