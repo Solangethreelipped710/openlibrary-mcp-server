@@ -4,7 +4,7 @@
  */
 
 import { JsonRpcErrorCode } from '@cyanheads/mcp-ts-core/errors';
-import { createMockContext } from '@cyanheads/mcp-ts-core/testing';
+import { createMockContext, getEnrichment } from '@cyanheads/mcp-ts-core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { openlibraryGetSubject } from '@/mcp-server/tools/definitions/openlibrary-get-subject.tool.js';
 import { initOpenLibraryService } from '@/services/open-library/open-library-service.js';
@@ -49,6 +49,9 @@ describe('openlibraryGetSubject', () => {
     expect(result.work_count).toBe(5432);
     expect(result.works).toHaveLength(2);
     expect(result.works[0]!.work_id).toBe('OL1W');
+
+    const enrichment = getEnrichment(ctx);
+    expect(enrichment.notice).toBeUndefined();
   });
 
   it('throws not_found for unknown subject', async () => {
@@ -96,7 +99,7 @@ describe('openlibraryGetSubject', () => {
     expect(input.offset).toBe(0);
   });
 
-  it('returns message when work_count is 0', async () => {
+  it('populates notice enrichment when work_count is 0', async () => {
     const ctx = createMockContext({ errors: openlibraryGetSubject.errors });
     const svc = (
       await import('@/services/open-library/open-library-service.js')
@@ -113,21 +116,25 @@ describe('openlibraryGetSubject', () => {
 
     expect(result.work_count).toBe(0);
     expect(result.works).toHaveLength(0);
-    expect(result.message).toContain('xzqnonexistent');
-    expect(result.message).toContain('lowercase');
+    // message is gone from output; notice lives in enrichment
+    expect((result as Record<string, unknown>).message).toBeUndefined();
+
+    const enrichment = getEnrichment(ctx);
+    expect(enrichment.notice).toContain('xzqnonexistent');
+    expect(enrichment.notice).toContain('lowercase');
   });
 
-  it('formats empty-result message in content text', () => {
+  it('formats empty-result subject correctly', () => {
     const emptyResult = {
       subject_name: 'xzqnonexistent',
       subject_key: 'xzqnonexistent',
       work_count: 0,
       works: [] as typeof SUBJECT_RESULT.works,
-      message: 'No works found for subject "xzqnonexistent". Try lowercase.',
     };
     const blocks = openlibraryGetSubject.format!(emptyResult);
     const text = (blocks[0] as { text: string }).text;
-    expect(text).toContain('No works found');
+    // format() shows header and zero counts; notice is in enrichment trailer
     expect(text).toContain('xzqnonexistent');
+    expect(text).toContain('Total works:** 0');
   });
 });

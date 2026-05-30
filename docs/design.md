@@ -226,7 +226,6 @@ The `availability` object shape (when present): `status`, `available_to_browse`,
 **Implementation note:** `availability` is requested by including it in the `fields` query parameter (e.g., `fields=key,title,availability`). It reads from the first IA identifier in the work's `ia` array. Works without any `ia` items return no `availability` key even with `include_availability: true` — surface this in the output as `availability: null`.
 
 **Errors:**
-- `no_results` — `NotFound`: Query matched no works. Broaden the query or try different terms.
 - `invalid_query` — `InvalidParams`: Query syntax error. Check Solr field prefix syntax.
 
 ### `openlibrary_get_work`

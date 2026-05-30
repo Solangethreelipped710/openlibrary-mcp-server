@@ -47,13 +47,18 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
           .describe('A work under this subject.'),
       )
       .describe('Works under this subject, up to limit.'),
-    message: z
+  }),
+
+  /** Agent-facing context: empty-result notice when the subject has no works. */
+  enrichment: {
+    notice: z
       .string()
       .optional()
       .describe(
-        'Recovery hint when work_count is 0 — echoes the subject and suggests alternatives. Absent when works are found.',
+        'Recovery guidance when work_count is 0 — echoes the subject and suggests alternatives. Absent when works are found.',
       ),
-  }),
+  },
+
   errors: [
     {
       reason: 'not_found',
@@ -74,9 +79,14 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
     const result = await svc.getSubject(input.subject, input.limit, input.offset, ctx);
 
     if (result.work_count === 0) {
+      ctx.enrich.notice(
+        `No works found for subject "${input.subject}". Subjects on Open Library are user-contributed and case-sensitive — try lowercase (e.g., "science fiction"), an alternate form, or a broader term.`,
+      );
       return {
-        ...result,
-        message: `No works found for subject "${input.subject}". Subjects on Open Library are user-contributed and case-sensitive — try lowercase (e.g., "science fiction"), an alternate form, or a broader term.`,
+        subject_name: result.subject_name,
+        subject_key: result.subject_key,
+        work_count: 0,
+        works: [],
       };
     }
 
@@ -89,11 +99,6 @@ export const openlibraryGetSubject = tool('openlibrary_get_subject', {
     lines.push(
       `**Key:** ${result.subject_key} | **Total works:** ${result.work_count} | **Returned:** ${result.works.length}`,
     );
-
-    if (result.message) {
-      lines.push('');
-      lines.push(`> ${result.message}`);
-    }
 
     for (const work of result.works) {
       lines.push('');

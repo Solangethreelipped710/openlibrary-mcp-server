@@ -4,7 +4,6 @@
  */
 
 import { tool, z } from '@cyanheads/mcp-ts-core';
-import { JsonRpcErrorCode } from '@cyanheads/mcp-ts-core/errors';
 import { getOpenLibraryService } from '@/services/open-library/open-library-service.js';
 
 export const openlibrarySearchBooks = tool('openlibrary_search_books', {
@@ -138,21 +137,23 @@ export const openlibrarySearchBooks = tool('openlibrary_search_books', {
           .describe('A work-level result from the search.'),
       )
       .describe('Matching works, up to limit.'),
-    message: z
+  }),
+
+  /** Agent-facing context: the parsed query echo and empty-result notice. */
+  enrichment: {
+    queryEcho: z
       .string()
       .optional()
       .describe(
-        'Recovery hint when results are empty — echoes the search criteria and suggests how to broaden. Absent when results are found.',
+        'The effective search criteria as the server interpreted them — query string plus any active field filters. Absent when only a bare query is used.',
       ),
-  }),
-  errors: [
-    {
-      reason: 'no_results',
-      code: JsonRpcErrorCode.NotFound,
-      when: 'Query matched no works.',
-      recovery: 'Broaden the query, check spelling, or try different search terms.',
-    },
-  ],
+    notice: z
+      .string()
+      .optional()
+      .describe(
+        'Recovery guidance when results are empty — echoes the search criteria and suggests how to broaden. Absent when results are found.',
+      ),
+  },
 
   async handler(input, ctx) {
     ctx.log.info('Searching books', {
@@ -167,24 +168,27 @@ export const openlibrarySearchBooks = tool('openlibrary_search_books', {
     const svc = getOpenLibraryService();
     const result = await svc.searchBooks(input, ctx);
 
-    if (result.works.length === 0) {
-      const terms: string[] = [];
-      if (input.query) terms.push(`query "${input.query}"`);
-      if (input.title) terms.push(`title "${input.title}"`);
-      if (input.author) terms.push(`author "${input.author}"`);
-      if (input.subject) terms.push(`subject "${input.subject}"`);
-      const hint = terms.length
-        ? `No works matched ${terms.join(', ')}. Try broader or different terms.`
-        : 'No works matched your search. Try different filters or a general query.';
+    // Build queryEcho from active filters for agent context
+    const filters: string[] = [];
+    if (input.query) filters.push(`query "${input.query}"`);
+    if (input.title) filters.push(`title "${input.title}"`);
+    if (input.author) filters.push(`author "${input.author}"`);
+    if (input.subject) filters.push(`subject "${input.subject}"`);
+    if (input.publisher) filters.push(`publisher "${input.publisher}"`);
+    if (input.isbn) filters.push(`isbn "${input.isbn}"`);
+    if (input.language) filters.push(`language "${input.language}"`);
+    const queryEcho = filters.length > 1 ? filters.join(', ') : undefined;
 
-      return {
-        total: 0,
-        offset: result.offset,
-        works: [],
-        message: hint,
-      };
+    if (result.works.length === 0) {
+      const hint = filters.length
+        ? `No works matched ${filters.join(', ')}. Try broader or different terms.`
+        : 'No works matched your search. Try different filters or a general query.';
+      ctx.enrich({ queryEcho });
+      ctx.enrich.notice(hint);
+      return { total: 0, offset: result.offset, works: [] };
     }
 
+    ctx.enrich({ queryEcho });
     return { total: result.total, offset: result.offset, works: result.works };
   },
 
@@ -193,11 +197,6 @@ export const openlibrarySearchBooks = tool('openlibrary_search_books', {
     lines.push(
       `**Total results:** ${result.total} | **Offset:** ${result.offset} | **Returned:** ${result.works.length}`,
     );
-
-    if (result.message) {
-      lines.push('');
-      lines.push(`> ${result.message}`);
-    }
 
     for (const work of result.works) {
       lines.push('');

@@ -3,7 +3,7 @@
  * @module tests/tools/openlibrary-search-books.tool.test
  */
 
-import { createMockContext } from '@cyanheads/mcp-ts-core/testing';
+import { createMockContext, getEnrichment } from '@cyanheads/mcp-ts-core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { openlibrarySearchBooks } from '@/mcp-server/tools/definitions/openlibrary-search-books.tool.js';
 import { initOpenLibraryService } from '@/services/open-library/open-library-service.js';
@@ -34,7 +34,7 @@ describe('openlibrarySearchBooks', () => {
     initOpenLibraryService();
   });
 
-  it('returns empty works with message when no results', async () => {
+  it('returns empty works with notice enrichment when no results', async () => {
     const ctx = createMockContext({ errors: openlibrarySearchBooks.errors });
 
     // Stub the service to return empty results
@@ -52,8 +52,12 @@ describe('openlibrarySearchBooks', () => {
 
     expect(result.total).toBe(0);
     expect(result.works).toHaveLength(0);
-    expect(result.message).toBeDefined();
-    expect(result.message).toContain('xyzzy12345nonexistent');
+    // message is gone from output; notice lives in enrichment
+    expect((result as Record<string, unknown>).message).toBeUndefined();
+
+    const enrichment = getEnrichment(ctx);
+    expect(enrichment.notice).toBeDefined();
+    expect(enrichment.notice).toContain('xyzzy12345nonexistent');
   });
 
   it('returns works when search succeeds', async () => {
@@ -75,7 +79,35 @@ describe('openlibrarySearchBooks', () => {
     expect(result.total).toBe(1);
     expect(result.works).toHaveLength(1);
     expect(result.works[0]!.work_id).toBe('OL45804W');
-    expect(result.message).toBeUndefined();
+
+    const enrichment = getEnrichment(ctx);
+    expect(enrichment.notice).toBeUndefined();
+  });
+
+  it('populates queryEcho enrichment for multi-filter search', async () => {
+    const ctx = createMockContext({ errors: openlibrarySearchBooks.errors });
+    const svc = (
+      await import('@/services/open-library/open-library-service.js')
+    ).getOpenLibraryService();
+
+    const mockWork = makeWork();
+    vi.spyOn(svc, 'searchBooks').mockResolvedValueOnce({
+      total: 1,
+      offset: 0,
+      works: [mockWork],
+    });
+
+    const input = openlibrarySearchBooks.input.parse({
+      query: 'gatsby',
+      author: 'fitzgerald',
+      limit: 10,
+    });
+    await openlibrarySearchBooks.handler(input, ctx);
+
+    const enrichment = getEnrichment(ctx);
+    expect(enrichment.queryEcho).toBeDefined();
+    expect(enrichment.queryEcho).toContain('gatsby');
+    expect(enrichment.queryEcho).toContain('fitzgerald');
   });
 
   it('formats output with all key fields', () => {
@@ -121,12 +153,6 @@ describe('openlibrarySearchBooks', () => {
     const text = (openlibrarySearchBooks.format!(output)[0] as { text: string }).text;
 
     expect(text).toContain('No Internet Archive item found');
-  });
-
-  it('formats message in empty result', () => {
-    const output = { total: 0, offset: 0, works: [], message: 'No works matched "xyz".' };
-    const text = (openlibrarySearchBooks.format!(output)[0] as { text: string }).text;
-    expect(text).toContain('No works matched');
   });
 
   it('handles sparse work (no optional fields)', () => {

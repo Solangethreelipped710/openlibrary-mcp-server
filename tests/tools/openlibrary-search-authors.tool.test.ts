@@ -3,7 +3,7 @@
  * @module tests/tools/openlibrary-search-authors.tool.test
  */
 
-import { createMockContext } from '@cyanheads/mcp-ts-core/testing';
+import { createMockContext, getEnrichment } from '@cyanheads/mcp-ts-core/testing';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { openlibrarySearchAuthors } from '@/mcp-server/tools/definitions/openlibrary-search-authors.tool.js';
 import { initOpenLibraryService } from '@/services/open-library/open-library-service.js';
@@ -42,10 +42,12 @@ describe('openlibrarySearchAuthors', () => {
     expect(result.authors).toHaveLength(1);
     expect(result.authors[0]!.author_id).toBe('OL24638A');
     expect(result.authors[0]!.name).toBe('F. Scott Fitzgerald');
-    expect(result.message).toBeUndefined();
+
+    const enrichment = getEnrichment(ctx);
+    expect(enrichment.notice).toBeUndefined();
   });
 
-  it('returns empty authors with message when no results', async () => {
+  it('returns empty authors with notice enrichment when no results', async () => {
     const ctx = createMockContext({ errors: openlibrarySearchAuthors.errors });
     const svc = (
       await import('@/services/open-library/open-library-service.js')
@@ -57,8 +59,12 @@ describe('openlibrarySearchAuthors', () => {
 
     expect(result.total).toBe(0);
     expect(result.authors).toHaveLength(0);
-    expect(result.message).toBeDefined();
-    expect(result.message).toContain('xyzzy99nonexistent');
+    // message is gone from output; notice lives in enrichment
+    expect((result as Record<string, unknown>).message).toBeUndefined();
+
+    const enrichment = getEnrichment(ctx);
+    expect(enrichment.notice).toBeDefined();
+    expect(enrichment.notice).toContain('xyzzy99nonexistent');
   });
 
   it('applies default limit and offset', () => {
@@ -80,16 +86,6 @@ describe('openlibrarySearchAuthors', () => {
     expect(text).toContain('Francis Scott Key Fitzgerald');
     expect(text).toContain('Fiction');
     expect(text).toContain('3.9');
-  });
-
-  it('formats message in empty result', () => {
-    const output = {
-      total: 0,
-      authors: [],
-      message: 'No authors matched "xyz". Try a partial name.',
-    };
-    const text = (openlibrarySearchAuthors.format!(output)[0] as { text: string }).text;
-    expect(text).toContain('No authors matched');
   });
 
   it('formats sparse author (no optional fields)', () => {

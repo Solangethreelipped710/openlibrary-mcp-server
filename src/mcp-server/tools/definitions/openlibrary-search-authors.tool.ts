@@ -4,7 +4,6 @@
  */
 
 import { tool, z } from '@cyanheads/mcp-ts-core';
-import { JsonRpcErrorCode } from '@cyanheads/mcp-ts-core/errors';
 import { getOpenLibraryService } from '@/services/open-library/open-library-service.js';
 
 export const openlibrarySearchAuthors = tool('openlibrary_search_authors', {
@@ -52,19 +51,17 @@ export const openlibrarySearchAuthors = tool('openlibrary_search_authors', {
           .describe('A matching author record.'),
       )
       .describe('Matching authors, up to limit.'),
-    message: z
+  }),
+
+  /** Agent-facing context: empty-result notice when no authors match. */
+  enrichment: {
+    notice: z
       .string()
       .optional()
-      .describe('Recovery hint when results are empty. Absent when results are found.'),
-  }),
-  errors: [
-    {
-      reason: 'no_results',
-      code: JsonRpcErrorCode.NotFound,
-      when: 'Query matched no authors.',
-      recovery: 'Check the spelling, try a partial name, or use an alternate name form.',
-    },
-  ],
+      .describe(
+        'Recovery guidance when no authors match — echoes the query and suggests alternatives. Absent when results are found.',
+      ),
+  },
 
   async handler(input, ctx) {
     ctx.log.info('Searching authors', { query: input.query, limit: input.limit });
@@ -72,11 +69,10 @@ export const openlibrarySearchAuthors = tool('openlibrary_search_authors', {
     const result = await svc.searchAuthors(input.query, input.limit, input.offset, ctx);
 
     if (result.authors.length === 0) {
-      return {
-        total: 0,
-        authors: [],
-        message: `No authors matched "${input.query}". Try a partial name, check spelling, or use an alternate name form.`,
-      };
+      ctx.enrich.notice(
+        `No authors matched "${input.query}". Try a partial name, check spelling, or use an alternate name form.`,
+      );
+      return { total: 0, authors: [] };
     }
 
     return result;
@@ -85,11 +81,6 @@ export const openlibrarySearchAuthors = tool('openlibrary_search_authors', {
   format: (result) => {
     const lines: string[] = [];
     lines.push(`**Total:** ${result.total} | **Returned:** ${result.authors.length}`);
-
-    if (result.message) {
-      lines.push('');
-      lines.push(`> ${result.message}`);
-    }
 
     for (const author of result.authors) {
       lines.push('');
