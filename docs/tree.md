@@ -1,6 +1,6 @@
 # openlibrary-mcp-server - Directory Structure
 
-Generated on: 2026-05-29 03:42:22
+Generated on: 2026-05-30 09:11:28
 
 ```text
 openlibrary-mcp-server/
@@ -153,6 +153,7 @@ openlibrary-mcp-server/
 ├── .env.example
 ├── .gitignore
 ├── .mcpbignore
+├── AGENTS.md
 ├── biome.json
 ├── bun.lock
 ├── bunfig.toml

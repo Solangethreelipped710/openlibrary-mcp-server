@@ -2,6 +2,10 @@
 
 All notable changes to this project. Each entry links to its full per-version file in [changelog/](changelog/).
 
+## [0.1.10](changelog/0.1.x/0.1.10.md) — 2026-05-30
+
+Enrichment adoption on search tools — query echo, result totals, and empty-result guidance now surface in a typed enrichment block; removed dead no_results error contract from search_books and search_authors
+
 ## [0.1.9](changelog/0.1.x/0.1.9.md) — 2026-05-28
 
 @cyanheads/mcp-ts-core ^0.9.9 → ^0.9.13: HTTP body cap (413 guard), session-init gate, quieter 401/403/400/404 logging, GET /mcp surfaces package keywords; dep refresh
